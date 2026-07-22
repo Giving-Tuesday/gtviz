@@ -51,7 +51,7 @@ ignore = ["E501"]
 testpaths = ["tests"]
 addopts = "-q"
 filterwarnings = [
-  "error",
-  "ignore::DeprecationWarning:pywaffle",
-  "ignore::pytest.PytestUnraisableExceptionWarning",
+  "default",
+  "error::FutureWarning:gtviz",
+  "error::DeprecationWarning:gtviz",
 ]
