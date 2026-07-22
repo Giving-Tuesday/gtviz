@@ -12,6 +12,7 @@ matplotlib.use("Agg")  # headless everywhere
 
 import numpy as np
 import pandas as pd
+
 # Mirror the pandas-3 runtime: surface (not silence) downcasting behavior so
 # the test environment matches what production/newer pandas will do. The
 # opt-in flag exists only on pandas 2.x (on 3.x it is the default and the
