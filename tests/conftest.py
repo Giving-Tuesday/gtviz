@@ -12,11 +12,6 @@ matplotlib.use("Agg")  # headless everywhere
 
 import numpy as np
 import pandas as pd
-
-# Mirror the pandas-3 runtime: surface (not silence) downcasting behavior so
-# the test environment matches what production/newer pandas will do. The
-# opt-in flag exists only on pandas 2.x (on 3.x it is the default and the
-# option itself is deprecated), so gate on the major version.
 if int(pd.__version__.split(".")[0]) < 3:
     pd.set_option("future.no_silent_downcasting", True)
 import pytest
