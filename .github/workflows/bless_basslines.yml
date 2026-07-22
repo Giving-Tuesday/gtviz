@@ -1,0 +1,23 @@
+name: Bless baselines
+on: workflow_dispatch   # manual button in the Actions tab
+
+permissions:
+  contents: write
+
+jobs:
+  bless:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: pip install -e .[dev]
+      - run: pytest -q
+      - run: python tools/compare_images.py --update
+      - name: Commit refreshed baselines
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add tests/baseline
+          git commit -m "Re-bless baselines on CI runner" || echo "no changes"
+          git push
