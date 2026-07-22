@@ -9,6 +9,8 @@ from pathlib import Path
 import matplotlib
 
 matplotlib.use("Agg")  # headless everywhere
+import matplotlib.pyplot as plt
+plt.rcParams["font.family"] = "DejaVu Sans"   # bundled in matplotlib, identical on every OS
 
 import numpy as np
 import pandas as pd
