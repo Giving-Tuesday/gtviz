@@ -1,0 +1,51 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "gtviz"
+version = "0.3.0"
+description = "Publication-quality survey data visualization: dot plots, comparison tables, venn diagrams, choropleth color tables, HTML/PDF/PNG/SVG export."
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.10"
+authors = [{ name = "GivingPulse Analytics" }]
+keywords = ["visualization", "survey", "matplotlib", "reporting"]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Intended Audience :: Science/Research",
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3",
+  "Topic :: Scientific/Engineering :: Visualization",
+]
+dependencies = [
+  "matplotlib>=3.7",
+  "numpy>=1.24",
+  "pandas>=2.0",
+  "scipy>=1.10",
+  "matplotlib-venn>=0.11",
+]
+
+[project.optional-dependencies]
+waffle = ["pywaffle>=1.1"]
+docs = ["sphinx>=7", "furo", "myst-parser", "sphinx-copybutton", "sphinx-autodoc-typehints"]
+dev = ["pytest>=7", "pytest-cov", "ruff", "pillow"]
+
+[project.urls]
+Documentation = "https://gtviz.readthedocs.io"
+Source = "https://github.com/givingpulse/gtviz"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/gtviz"]
+
+[tool.ruff]
+line-length = 110
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP"]
+ignore = ["E501"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"

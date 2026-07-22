@@ -1,0 +1,187 @@
+"""Trend line charts: rolling weekly trends and split lines.
+
+Consolidates ``plot_monetary_giving_rolling_weeks``, the three duplicate
+``weekly_trends_plot_news_aware`` definitions, ``civic_gt_awareness_splits``
+and ``civic_gt_awareness_split_quartiles``, plus ``crisis_awareness_plot``'s
+event-annotation idea.
+
+Styling defaults ported from the originals: 10x6 figure, plain solid lines
+in the default matplotlib color cycle (no markers), legend anchored at
+``(1, 1)`` outside the plot, no grid, and optional gray "current period"
+background shading (``fill_between`` alpha 0.2).
+"""
+
+from __future__ import annotations
+
+import pandas as pd
+
+from .._mpl import resolve_ax
+from ..stats.summaries import rolling_summary
+from ..theme import palette
+
+__all__ = ["rolling_trend", "split_line_plot", "annotated_event_plot"]
+
+
+def rolling_trend(
+    df: pd.DataFrame,
+    columns: list[str],
+    time_col: str = "collection_week",
+    window: int = 3,
+    labels: dict | None = None,
+    weights: str | None = "auto",
+    colors: list | None = None,
+    marker: str | None = None,
+    shade: pd.Series | tuple | None = None,
+    shade_color: str = "grey",
+    shade_alpha: float = 0.2,
+    grid: bool = False,
+    legend_anchor: tuple = (1, 1),
+    ax=None,
+    title: str | None = None,
+    ylabel: str = "% of respondents",
+    ylim: tuple | None = None,
+    figsize: tuple = (10, 6),
+):
+    """Rolling weighted trend lines, one per metric column.
+
+    Parameters
+    ----------
+    colors:
+        Explicit line colors; default None uses the matplotlib color cycle
+        (the original charts' behavior).
+    marker:
+        Point marker; original charts draw plain lines (None).
+    shade:
+        Gray background band marking a period (original "current year"
+        shading): either a ``(start, stop)`` tuple in ``time_col`` units or
+        a boolean Series indexed like the summary periods.
+    grid:
+        Dotted y-grid (off in the originals).
+
+    Returns
+    -------
+    (fig, ax); the summarized data is available via ``ax._gtviz_data``.
+    """
+    labels = labels or {}
+    summary = rolling_summary(df, columns, time_col=time_col, window=window, weights=weights)
+    fig, ax, _ = resolve_ax(ax, figsize=figsize)
+
+    if shade is not None:
+        top = float(summary.max().max()) * 1.05
+        if isinstance(shade, tuple):
+            ax.axvspan(shade[0], shade[1], color=shade_color, alpha=shade_alpha, zorder=-10)
+        else:
+            mask = pd.Series(shade).reindex(summary.index).fillna(False).astype(float)
+            ax.fill_between(summary.index, 0, mask * top, color=shade_color,
+                            alpha=shade_alpha, zorder=-10)
+
+    for i, c in enumerate(columns):
+        kwargs = {"label": labels.get(c, c)}
+        if colors:
+            kwargs["color"] = colors[i % len(colors)]
+        if marker:
+            kwargs["marker"] = marker
+        ax.plot(summary.index, summary[c], **kwargs)
+
+    ax.set_ylabel(ylabel)
+    ax.set_xlabel(time_col.replace("_", " ").title())
+    if grid:
+        ax.grid(axis="y", color=palette["grid"], linestyle=":", zorder=-10)
+    ax.legend(bbox_to_anchor=legend_anchor)
+    if ylim:
+        ax.set_ylim(*ylim)
+    if title:
+        ax.set_title(title)
+    ax._gtviz_data = summary
+    fig.tight_layout()
+    return fig, ax
+
+
+def split_line_plot(
+    df: pd.DataFrame,
+    value_col: str,
+    split: dict | str | None,
+    time_col: str = "collection_week",
+    metric: str = "mean",
+    by_quartile: bool = False,
+    labels: dict | None = None,
+    colors: list | None = None,
+    grid: bool = False,
+    ax=None,
+    title: str | None = None,
+    figsize: tuple = (8, 6),
+):
+    """Trend of one metric split by group (or by its own quartiles).
+
+    Merges ``civic_gt_awareness_splits`` and ``..._split_quartiles``:
+
+    - ``split`` a column name: one line per level of that column.
+    - ``split`` a dict ``{label: boolean mask}``: one line per mask.
+    - ``by_quartile=True``: one line per quartile of ``value_col``.
+
+    Original styling: 8x6 figure, ``o`` markers with solid lines, series
+    colors starting light-gray (for an "Everyone" first split), frameless
+    legend, no grid.
+    """
+    labels = labels or {}
+    colors = colors or palette["split_series"]
+    fig, ax, _ = resolve_ax(ax, figsize=figsize)
+
+    if by_quartile:
+        q = pd.qcut(df[value_col], 4, labels=["Q1 (low)", "Q2", "Q3", "Q4 (high)"], duplicates="drop")
+        groups = {str(lv): (q == lv) for lv in q.cat.categories}
+    elif isinstance(split, str):
+        groups = {str(lv): (df[split] == lv) for lv in df[split].dropna().unique()}
+    else:
+        groups = split
+
+    for i, (name, mask) in enumerate(groups.items()):
+        series = df.loc[mask].groupby(time_col)[value_col].agg(metric)
+        ax.plot(series.index, series.values, marker="o", linestyle="-",
+                label=labels.get(name, name), color=colors[i % len(colors)])
+    ax.legend(frameon=False)
+    if grid:
+        ax.grid(axis="y", color=palette["grid"], linestyle=":", zorder=-10)
+    ax.set_xlabel(time_col.replace("_", " ").title())
+    ax.set_ylabel(value_col)
+    if title:
+        ax.set_title(title)
+    fig.tight_layout()
+    return fig, ax
+
+
+def annotated_event_plot(
+    df: pd.DataFrame,
+    value_col: str,
+    events: dict,
+    time_col: str = "real_date",
+    window: int = 3,
+    grid: bool = False,
+    ax=None,
+    title: str | None = None,
+    color: str | None = None,
+    figsize: tuple = (10, 6),
+):
+    """Single rolling trend line with labeled vertical event markers
+    (generalizes ``crisis_awareness_plot``).
+
+    Parameters
+    ----------
+    events:
+        Mapping ``{x_position: "label"}`` -- vertical dashed lines with
+        rotated annotations (e.g. crisis onsets).
+    """
+    series = df.groupby(time_col)[value_col].mean().rolling(window, min_periods=1).mean() * 100
+    fig, ax, _ = resolve_ax(ax, figsize=figsize)
+    ax.plot(series.index, series.values, color=color)
+    top = series.max()
+    for x, label in events.items():
+        ax.axvline(x, color="0.4", linestyle="--", linewidth=1)
+        ax.annotate(label, (x, top), rotation=90, fontsize=9, va="top", ha="right", color="0.3")
+    ax.set_ylabel(f"% {value_col}")
+    if grid:
+        ax.grid(axis="y", color=palette["grid"], linestyle=":", zorder=-10)
+    if title:
+        ax.set_title(title)
+    fig.tight_layout()
+    return fig, ax

@@ -1,0 +1,25 @@
+name: Docs
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build-docs:
+    # Read the Docs builds the published site; this job catches Sphinx
+    # errors in PRs before they land.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: pip install -e .[docs]
+      - name: Regenerate gallery images for docs
+        run: python examples/generate_gallery.py
+      - name: Build Sphinx docs (warnings are errors)
+        run: sphinx-build -W -b html docs docs/_build/html
+      - uses: actions/upload-artifact@v4
+        with:
+          name: docs-html
+          path: docs/_build/html

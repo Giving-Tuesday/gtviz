@@ -1,0 +1,9 @@
+__pycache__/
+*.egg-info/
+dist/
+build/
+.coverage
+tests/output/
+docs/_build/
+docs/_static/gallery/
+gpviz_output/
