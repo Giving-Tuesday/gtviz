@@ -7,3 +7,5 @@ tests/output/
 docs/_build/
 docs/_static/gallery/
 gpviz_output/
+._*
+.DS_Store
