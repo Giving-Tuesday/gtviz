@@ -84,7 +84,8 @@ class ScoreBelonging(PipelineStep):
         for col, val in zip(self.cols, self.valence):
             s = out[col]
             if self.answer_map and not pd.api.types.is_numeric_dtype(s):
-                s = s.replace(self.answer_map)
+                # ScoreBelonging.transform
+                s = s.replace(self.answer_map).infer_objects()
             s = pd.to_numeric(s, errors="coerce")
             coded[col] = (3 - s) if val == "-" else s
             if self.verbose:
@@ -151,7 +152,12 @@ class ScoreCivicIntent(PipelineStep):
     def transform(self, df: pd.DataFrame) -> pd.DataFrame:
         out = df.copy()
         for new_col, src in self.RECENCY_COLS.items():
-            out[new_col] = pd.to_numeric(out[src], errors="coerce").replace(self.recency_map)
+            # ScoreCivicIntent.transform (recency loop)
+            out[new_col] = (
+                pd.to_numeric(out[src], errors="coerce")
+                .replace(self.recency_map)
+                .infer_objects()
+            )            
 
         num = lambda c: pd.to_numeric(out[c], errors="coerce").fillna(0)  # noqa: E731
         q11 = out[self.q11_items].apply(pd.to_numeric, errors="coerce").fillna(0)
@@ -302,8 +308,14 @@ class AssignPew(PipelineStep):
         out = df.copy()
         center = ({1: 1.0, 2: 0.5, 3: 0.0} if self.pipeline_version >= 2026
                   else {3: 1.0, 2: 0.5, 1: 0.0})
+        
         centered = np.column_stack([
-            pd.to_numeric(out[q + "_scale"], errors="coerce").replace(center).fillna(0.5).values
+            # AssignPew.transform (centered stack)
+            pd.to_numeric(out[q + "_scale"], errors="coerce")
+                .replace(center)
+                .infer_objects()
+                .fillna(0.5)
+                .values            
             for q in self.QUESTIONS
         ])  # (n, 8)
 
