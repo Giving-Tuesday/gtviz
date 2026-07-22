@@ -310,7 +310,6 @@ class AssignPew(PipelineStep):
                   else {3: 1.0, 2: 0.5, 1: 0.0})
 
         centered = np.column_stack([
-            # AssignPew.transform (centered stack)
             pd.to_numeric(out[q + "_scale"], errors="coerce")
                 .replace(center)
                 .infer_objects()
