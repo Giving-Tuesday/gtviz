@@ -43,8 +43,8 @@ guides/design_defaults
 guides/maps
 guides/pipeline
 guides/ci_images
-guides/migration
 guides/publishing
+guides/migration
 ```
 
 ```{toctree}
