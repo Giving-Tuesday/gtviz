@@ -1,5 +1,13 @@
 # gtviz
 
+[![PyPI version](https://img.shields.io/pypi/v/gtviz.svg)](https://pypi.org/project/gtviz/)
+[![Python versions](https://img.shields.io/pypi/pyversions/gtviz.svg)](https://pypi.org/project/gtviz/)
+[![CI](https://github.com/Giving-Tuesday/gtviz/actions/workflows/ci.yml/badge.svg)](https://github.com/Giving-Tuesday/gtviz/actions/workflows/ci.yml)
+[![Docs](https://readthedocs.org/projects/gtviz/badge/?version=latest)](https://gtviz.readthedocs.io/en/latest/)
+[![codecov](https://codecov.io/gh/Giving-Tuesday/gtviz/branch/main/graph/badge.svg)](https://codecov.io/gh/Giving-Tuesday/gtviz)
+[![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 Publication-quality survey data visualization, refactored from the GivingPulse
 quarterly-report codebase into a clean, survey-agnostic library.
 

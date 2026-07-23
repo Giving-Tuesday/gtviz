@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "gtviz"
-version = "0.3.1"
+version = "0.3.3"
 description = "Publication-quality survey data visualization: dot plots, comparison tables, venn diagrams, choropleth color tables, HTML/PDF/PNG/SVG export."
 readme = "README.md"
 license = { text = "MIT" }
@@ -33,11 +33,26 @@ docs = ["sphinx>=7", "furo", "myst-parser", "sphinx-copybutton", "sphinx-autodoc
 dev = ["pytest>=7", "pytest-cov", "ruff", "pillow"]
 
 [project.urls]
+Homepage = "https://github.com/Giving-Tuesday/gtviz"
 Documentation = "https://gtviz.readthedocs.io"
-Source = "https://github.com/givingpulse/gtviz"
+Source = "https://github.com/Giving-Tuesday/gtviz"
+Changelog = "https://github.com/Giving-Tuesday/gtviz/blob/main/CHANGELOG.md"
+Issues = "https://github.com/Giving-Tuesday/gtviz/issues"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/gtviz"]
+
+[tool.hatch.build.targets.sdist]
+# Ship source + docs + tests, but not the large binary baseline/gallery
+# images (regenerated on demand; they bloat the sdist and aren't needed to
+# install or use the package).
+exclude = [
+  "tests/baseline/*.png",
+  "tests/output",
+  "docs/_static/gallery",
+  "dist",
+  "*.pdf",
+]
 
 [tool.ruff]
 line-length = 110
@@ -50,8 +65,16 @@ ignore = ["E501"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-q"
+# Mirror the production/pandas-3 runtime rather than suppressing signals:
+# opt into future no-silent-downcasting, and fail on our own warnings so
+# deprecations surface in CI. Third-party deprecations we don't control are
+# allowlisted individually.
 filterwarnings = [
-  "default",
-  "error::FutureWarning:gtviz",
-  "error::DeprecationWarning:gtviz",
+  "error",
+  "ignore::DeprecationWarning:pywaffle",
+  "ignore::pytest.PytestUnraisableExceptionWarning",
 ]
+
+[tool.gtviz]
+# documentation marker only; the flag is set in tests/conftest.py so it also
+# applies when the library is used outside pytest.

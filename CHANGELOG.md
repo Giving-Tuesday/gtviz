@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.3.3 (2026-07-23)
+- Fixed CI/CD and prepared for pypi
+
 ## 0.3.0 (2026-07-22)
 
 - **Renamed package `gpviz` → `gtviz`** (imports, env var `GTVIZ_OUTPUT_DIR`,
