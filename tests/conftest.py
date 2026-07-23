@@ -3,20 +3,18 @@
 real respondent data ever enters the repo."""
 
 from __future__ import annotations
-
 from pathlib import Path
-
 import matplotlib
-
-matplotlib.use("Agg")  # headless everywhere
 import matplotlib.pyplot as plt
-plt.rcParams["font.family"] = "DejaVu Sans"   # bundled in matplotlib, identical on every OS
-
 import numpy as np
 import pandas as pd
+import pytest
+
+# CONFIG SETTINGS
+matplotlib.use("Agg")  # headless everywhere
 if int(pd.__version__.split(".")[0]) < 3:
     pd.set_option("future.no_silent_downcasting", True)
-import pytest
+plt.rcParams["font.family"] = "DejaVu Sans"   # bundled in matplotlib, identical on every OS
 
 OUTPUT_DIR = Path(__file__).parent / "output"
 
