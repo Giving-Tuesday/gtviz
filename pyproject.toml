@@ -70,9 +70,10 @@ addopts = "-q"
 # deprecations surface in CI. Third-party deprecations we don't control are
 # allowlisted individually.
 filterwarnings = [
-  "error",
-  "ignore::DeprecationWarning:pywaffle",
-  "ignore::pytest.PytestUnraisableExceptionWarning",
+  "default",
+  "error::FutureWarning:gtviz",
+  "error::DeprecationWarning:gtviz",
+  "ignore:The NumPy module was reloaded:UserWarning",
 ]
 
 [tool.gtviz]
