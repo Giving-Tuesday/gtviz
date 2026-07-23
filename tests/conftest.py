@@ -3,7 +3,9 @@
 real respondent data ever enters the repo."""
 
 from __future__ import annotations
+
 from pathlib import Path
+
 import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
