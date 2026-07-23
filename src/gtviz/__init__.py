@@ -15,15 +15,21 @@ Quick start
 from . import charts, io, maps, pipeline, stats, tables, theme
 from .charts import (
     annotated_event_plot,
+    arrow_range_plot,
+    banded_shares,
+    contribution_bars,
     donut,
     dot_plot,
     funnel,
     funnel_from_columns,
     grouped_dot_plot,
     likert_bars,
+    nested_bars,
     parallel_bars,
+    range_dot_plot,
     rolling_trend,
     split_line_plot,
+    stacked_bars,
     trend_dot_plot,
     venn,
     venn_from_counts,
@@ -33,7 +39,7 @@ from .config import options, set_options
 from .maps import choropleth_table, scale_bar
 from .tables import HtmlTable, compare_periods, pivot_change_table
 
-__version__ = "0.3.3"
+__version__ = "0.5.0"
 
 __all__ = [
     "__version__",
@@ -46,8 +52,17 @@ __all__ = [
     "rolling_trend", "split_line_plot", "annotated_event_plot",
     "venn", "venn_from_counts", "weighted_heatmap",
     "funnel", "funnel_from_columns", "donut", "likert_bars",
+    "stacked_bars", "banded_shares",
+    "contribution_bars", "range_dot_plot", "arrow_range_plot", "nested_bars",
     # tables
     "HtmlTable", "compare_periods", "pivot_change_table",
     # maps
     "choropleth_table", "scale_bar",
 ]
+
+try:  # optional extra: pip install gtviz[waffle]
+    from .charts import waffle  # noqa: E402, F401
+
+    __all__.append("waffle")
+except ImportError:  # pragma: no cover
+    pass

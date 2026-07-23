@@ -1,21 +1,21 @@
-"""Trend line charts: rolling weekly trends and split lines.
+"""Trend line charts: rolling weekly trends and split lines -- report style.
+
+Brand defaults from the published figures: thick (rc 2.5) plain solid lines
+in the tableau (tab10) cycle, **no point markers**, no grid, no top/right
+spines (rc), frameless legend inside the plot area, bold left-aligned title
+with a gray "Rolling N-week average | n = X respondents" subtitle.
 
 Consolidates ``plot_monetary_giving_rolling_weeks``, the three duplicate
 ``weekly_trends_plot_news_aware`` definitions, ``civic_gt_awareness_splits``
 and ``civic_gt_awareness_split_quartiles``, plus ``crisis_awareness_plot``'s
 event-annotation idea.
-
-Styling defaults ported from the originals: 10x6 figure, plain solid lines
-in the default matplotlib color cycle (no markers), legend anchored at
-``(1, 1)`` outside the plot, no grid, and optional gray "current period"
-background shading (``fill_between`` alpha 0.2).
 """
 
 from __future__ import annotations
 
 import pandas as pd
 
-from .._mpl import resolve_ax
+from .._mpl import brand_title, resolve_ax
 from ..stats.summaries import rolling_summary
 from ..theme import palette
 
@@ -31,32 +31,39 @@ def rolling_trend(
     weights: str | None = "auto",
     colors: list | None = None,
     marker: str | None = None,
+    linewidth: float | None = None,
     shade: pd.Series | tuple | None = None,
     shade_color: str = "grey",
     shade_alpha: float = 0.2,
     grid: bool = False,
-    legend_anchor: tuple = (1, 1),
+    legend_loc: str | tuple = "best",
     ax=None,
     title: str | None = None,
+    subtitle: str | None = None,
+    n: int | None = None,
     ylabel: str = "% of respondents",
+    xlabel: str | None = None,
     ylim: tuple | None = None,
     figsize: tuple = (10, 6),
 ):
-    """Rolling weighted trend lines, one per metric column.
+    """Rolling weighted trend lines, one per metric column (report style).
 
     Parameters
     ----------
     colors:
-        Explicit line colors; default None uses the matplotlib color cycle
-        (the original charts' behavior).
+        Explicit line colors; default None uses the matplotlib/tableau
+        color cycle (the report figures' palette).
     marker:
-        Point marker; original charts draw plain lines (None).
+        Point marker; the report figures draw plain lines (None).
+    linewidth:
+        Defaults to the theme's 2.5.
     shade:
-        Gray background band marking a period (original "current year"
-        shading): either a ``(start, stop)`` tuple in ``time_col`` units or
-        a boolean Series indexed like the summary periods.
-    grid:
-        Dotted y-grid (off in the originals).
+        Gray background band marking a period: a ``(start, stop)`` tuple in
+        ``time_col`` units or a boolean Series indexed like the summary.
+    subtitle, n:
+        Gray header line under the bold title; ``n=`` renders
+        "n = 5,387 respondents". Combine manually via ``subtitle=`` for
+        "Rolling four-week average | n = 5,387 respondents".
 
     Returns
     -------
@@ -81,17 +88,22 @@ def rolling_trend(
             kwargs["color"] = colors[i % len(colors)]
         if marker:
             kwargs["marker"] = marker
+        if linewidth:
+            kwargs["linewidth"] = linewidth
         ax.plot(summary.index, summary[c], **kwargs)
 
     ax.set_ylabel(ylabel)
-    ax.set_xlabel(time_col.replace("_", " ").title())
+    if xlabel is not None:
+        ax.set_xlabel(xlabel)
     if grid:
         ax.grid(axis="y", color=palette["grid"], linestyle=":", zorder=-10)
-    ax.legend(bbox_to_anchor=legend_anchor)
+    if isinstance(legend_loc, tuple):
+        ax.legend(bbox_to_anchor=legend_loc)
+    else:
+        ax.legend(loc=legend_loc)
     if ylim:
         ax.set_ylim(*ylim)
-    if title:
-        ax.set_title(title)
+    brand_title(ax, title, subtitle=subtitle, n=n)
     ax._gtviz_data = summary
     fig.tight_layout()
     return fig, ax
@@ -106,10 +118,15 @@ def split_line_plot(
     by_quartile: bool = False,
     labels: dict | None = None,
     colors: list | None = None,
+    marker: str | None = None,
+    linewidth: float | None = None,
     grid: bool = False,
+    legend_loc: str | tuple = "best",
     ax=None,
     title: str | None = None,
-    figsize: tuple = (8, 6),
+    subtitle: str | None = None,
+    n: int | None = None,
+    figsize: tuple = (10, 6),
 ):
     """Trend of one metric split by group (or by its own quartiles).
 
@@ -119,12 +136,12 @@ def split_line_plot(
     - ``split`` a dict ``{label: boolean mask}``: one line per mask.
     - ``by_quartile=True``: one line per quartile of ``value_col``.
 
-    Original styling: 8x6 figure, ``o`` markers with solid lines, series
-    colors starting light-gray (for an "Everyone" first split), frameless
-    legend, no grid.
+    Report style: thick plain lines in the tableau cycle, no markers, no
+    grid, frameless inside legend. Pass
+    ``colors=gtviz.theme.palette["split_series"]`` for the legacy
+    light-gray-Everyone-first palette.
     """
     labels = labels or {}
-    colors = colors or palette["split_series"]
     fig, ax, _ = resolve_ax(ax, figsize=figsize)
 
     if by_quartile:
@@ -137,15 +154,23 @@ def split_line_plot(
 
     for i, (name, mask) in enumerate(groups.items()):
         series = df.loc[mask].groupby(time_col)[value_col].agg(metric)
-        ax.plot(series.index, series.values, marker="o", linestyle="-",
-                label=labels.get(name, name), color=colors[i % len(colors)])
-    ax.legend(frameon=False)
+        kwargs = {"label": labels.get(name, name)}
+        if colors:
+            kwargs["color"] = colors[i % len(colors)]
+        if marker:
+            kwargs["marker"] = marker
+        if linewidth:
+            kwargs["linewidth"] = linewidth
+        ax.plot(series.index, series.values, **kwargs)
+    if isinstance(legend_loc, tuple):
+        ax.legend(bbox_to_anchor=legend_loc)
+    else:
+        ax.legend(loc=legend_loc)
     if grid:
         ax.grid(axis="y", color=palette["grid"], linestyle=":", zorder=-10)
     ax.set_xlabel(time_col.replace("_", " ").title())
     ax.set_ylabel(value_col)
-    if title:
-        ax.set_title(title)
+    brand_title(ax, title, subtitle=subtitle, n=n)
     fig.tight_layout()
     return fig, ax
 
@@ -159,6 +184,8 @@ def annotated_event_plot(
     grid: bool = False,
     ax=None,
     title: str | None = None,
+    subtitle: str | None = None,
+    n: int | None = None,
     color: str | None = None,
     figsize: tuple = (10, 6),
 ):
@@ -181,7 +208,6 @@ def annotated_event_plot(
     ax.set_ylabel(f"% {value_col}")
     if grid:
         ax.grid(axis="y", color=palette["grid"], linestyle=":", zorder=-10)
-    if title:
-        ax.set_title(title)
+    brand_title(ax, title, subtitle=subtitle, n=n)
     fig.tight_layout()
     return fig, ax

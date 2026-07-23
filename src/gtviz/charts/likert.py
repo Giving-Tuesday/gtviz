@@ -32,7 +32,7 @@ def likert_bars(
     highlight_agree: bool = False,
     colors: list | None = None,
     min_label_width: float = 0,
-    legend_anchor: tuple = (0.99, 1),
+    legend: str = "right",
     ax=None,
     title: str | None = None,
     figsize: tuple | None = None,
@@ -52,6 +52,9 @@ def likert_bars(
     min_label_width:
         Suppress bar labels for segments at or below this percent width
         (original suppresses only zero-width segments).
+    legend:
+        ``"right"`` (outside upper-right, original style), ``"top"``
+        (horizontal above the plot, country-bands style), or ``"none"``.
 
     Returns
     -------
@@ -67,6 +70,8 @@ def likert_bars(
     if colors is None:
         if ncat <= 4:
             colors = list(palette["likert4"][:ncat])
+        elif ncat == 5:
+            colors = list(palette["bands5"])  # red-orange-olive-green-blue
         else:
             import matplotlib.pyplot as plt
 
@@ -91,8 +96,15 @@ def likert_bars(
     ax.set_yticks(y)
     ax.set_yticklabels([item_labels.get(i, i) for i in items])
     ax.set_xlim(0, 100)
+    for s_ in ax.spines.values():
+        s_.set_visible(False)
+    ax.tick_params(axis="both", length=2)
     ax.set_xlabel("% of respondents")
-    ax.legend(bbox_to_anchor=legend_anchor, loc="upper left", borderaxespad=0.0)
+    if legend == "right":
+        ax.legend(bbox_to_anchor=(1.02, 1), loc="upper left", borderaxespad=0.0, frameon=False)
+    elif legend == "top":
+        ax.legend(loc="lower center", bbox_to_anchor=(0.5, 1.02),
+                  ncol=min(ncat, 5), borderaxespad=0.0)
     if title:
         ax.set_title(title)
     fig.tight_layout()

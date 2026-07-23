@@ -34,6 +34,14 @@ palette = {
     "likert4": ["tab:red", "tab:orange", "tab:olive", "tab:green"],
     # stacked pew/stress bars (original)
     "stacked3": ["tab:blue", "tab:olive", "tab:red"],
+    # 5-band 100%-stacked scale, low->high (report country/civic-intent bands)
+    "bands5": ["tab:red", "tab:orange", "tab:olive", "tab:green", "tab:blue"],
+    # venn set colors: Money steel-blue, Items turquoise, Volunteering green
+    "venn": ["#4e79a7", "#45c5d6", "#a5cc51"],
+    # waffle category sequence (report aid-flows order)
+    "waffle": ["tab:blue", "tab:red", "tab:purple", "tab:orange", "tab:green",
+               "tab:cyan", "tab:brown", "tab:gray", "tab:pink"],
+    "subtitle": "#666666",   # gray "n = X respondents" subtitle text
 }
 
 _PROFILES = {
@@ -46,6 +54,13 @@ _PROFILES = {
         "font.size": 14,
         "legend.fontsize": 14,
         "axes.titlesize": 16,
+        # brand look from the published reports:
+        "axes.titlelocation": "left",
+        "axes.titleweight": "bold",
+        "axes.spines.top": False,
+        "axes.spines.right": False,
+        "lines.linewidth": 2.5,
+        "legend.frameon": False,
     },
     "publication": {
         "figure.dpi": 300,

@@ -13,6 +13,20 @@ def resolve_ax(ax=None, figsize=None):
     return ax.figure, ax, False
 
 
+def brand_title(ax, title=None, subtitle=None, n=None):
+    """Report-style header: bold left-aligned title with an optional gray
+    subtitle line (pass ``subtitle=`` text or ``n=`` for
+    "n = 5,387 respondents")."""
+    sub = subtitle or (f"n = {n:,} respondents" if n else None)
+    if title:
+        ax.set_title(title, loc="left", fontweight="bold",
+                     pad=26 if sub else 10)
+    if sub:
+        ax.text(0, 1.03, sub, transform=ax.transAxes, fontsize=10,
+                color="#666666", ha="left", va="bottom")
+    return ax
+
+
 def finish(fig, save=None, show=False, name=None, formats=("png",)):
     """Common tail for chart functions: optional save + optional show."""
     if save:

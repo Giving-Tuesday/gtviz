@@ -143,3 +143,80 @@ def test_likert_bars(survey, output_dir):
         title="Attitudes",
     )
     save_test_image(fig, output_dir, "likert_bars")
+
+
+def test_stacked_bars_and_banded_shares(survey, output_dir):
+    survey = survey.copy()
+    survey["civic_score"] = survey["civic_intent"] * 20  # 0-100 scale
+    tab = gtviz.banded_shares(survey, "region", "civic_score")
+    assert tab.shape[1] == 5
+    assert abs(tab.sum(axis=1) - 100).max() < 0.5
+    fig, ax = gtviz.stacked_bars(tab, title="How Civic Intent varies by region",
+                                 n=len(survey))
+    from conftest import save_test_image
+    save_test_image(fig, output_dir, "stacked_bars")
+
+
+def test_stacked_bars_labels_and_legend_right(survey, output_dir):
+    import pandas as pd
+    tab = pd.DataFrame({"Low": [30, 10], "Mid": [40, 50], "High": [30, 40]},
+                       index=["Canada", "Kenya"])
+    fig, ax = gtviz.stacked_bars(tab, bar_labels=True, legend="right",
+                                 title="Three bands")
+    assert ax.get_xlim() == (0.0, 100.0)
+
+
+def test_venn_weighted_default_and_set_percentages(survey, output_dir):
+    fig, ax = gtviz.venn(survey, ["gave_money", "volunteered", "gave_items"],
+                         labels=["Gave Money", "Volunteered", "Gave Items"],
+                         set_percentages=True,
+                         title="Giving breakdown by gift type")
+    from conftest import save_test_image
+    save_test_image(fig, output_dir, "venn_weighted_brand")
+
+
+def test_contribution_bars_with_benchmarks(output_dir):
+    from conftest import save_test_image
+    fig, ax = gtviz.contribution_bars(
+        [5, 16], ["Aware, inspired somewhat", "Aware, inspired a lot"],
+        benchmarks=[68, 79], title="Increase in civic intent")
+    save_test_image(fig, output_dir, "contribution_bars")
+    fig, ax = gtviz.contribution_bars([27, 10, 22], ["Kindness", "Give more", "Help others"])
+    assert len(ax.patches) == 3
+
+
+def test_range_dot_plot(output_dir):
+    import pandas as pd
+    from conftest import save_test_image
+    df = pd.DataFrame({"low": [60, 54, 48], "high": [84, 74, 73]},
+                      index=["Initiated helping", "Local generosity", "Acted generously"])
+    fig, ax = gtviz.range_dot_plot(df, "low", "high", benchmark=62,
+                                   right_labels=["8%", "40%", "56%"],
+                                   title="Components of civil intent")
+    save_test_image(fig, output_dir, "range_dot_plot")
+
+
+def test_arrow_range_plot(output_dir):
+    import pandas as pd
+    from conftest import save_test_image
+    df = pd.DataFrame({"b0": [47, 48, 50], "b1": [52, 60, 46],
+                       "c0": [57, 60, 62], "c1": [66, 76, 55]},
+                      index=["Aware of disaster", "Responded generously", "Not solicited"])
+    fig, ax = gtviz.arrow_range_plot(
+        df, {"Belonging": ("b0", "b1", "tab:green"), "Civic": ("c0", "c1", "tab:blue")},
+        averages={"Belonging\naverage": (49, "tab:green"), "Civic Intent\naverage": (62, "tab:blue")},
+        title="Civic intent vs belonging")
+    save_test_image(fig, output_dir, "arrow_range_plot")
+
+
+def test_nested_bars(output_dir):
+    import pandas as pd
+    from conftest import save_test_image
+    tab = pd.DataFrame({"Aware": [33, 8, 16, 26, 35, 58],
+                        "Aware and inspired": [19, 0, 3, 13, 20, 45],
+                        "Very inspired": [8, 0, 1, 2, 7, 28]},
+                       index=["Everyone", "0-20", "20-40", "40-60", "60-80", "80-100"])
+    fig, ax = gtviz.nested_bars(tab, ylabel="Percent aware/inspired", xlabel="Civic Intent",
+                                title="GivingTuesday awareness by civic intent")
+    assert len(ax.patches) == 18
+    save_test_image(fig, output_dir, "nested_bars")

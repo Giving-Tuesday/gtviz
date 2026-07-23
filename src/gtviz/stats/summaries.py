@@ -17,8 +17,14 @@ def _resolve_weights(df: pd.DataFrame, weights) -> pd.Series:
     if weights is None:
         return pd.Series(1.0, index=df.index)
     if isinstance(weights, str):
-        col = options.weight_col if weights == "auto" else weights
-        return df[col]
+        if weights == "auto":
+            # "auto" = use the configured weight column when present,
+            # otherwise fall back to unweighted (demo/unweighted frames).
+            col = options.weight_col
+            if col not in df.columns:
+                return pd.Series(1.0, index=df.index)
+            return df[col]
+        return df[weights]  # explicit column name: missing is an error
     return pd.Series(weights, index=df.index)
 
 

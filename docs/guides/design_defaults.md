@@ -17,6 +17,9 @@ default, verbatim.
 | export DPI | 300 | `io.save(..., dpi=)` / `set_options(dpi=)` |
 | inline figure DPI | 300 (original) | `theme` profile / rcParams |
 | base / legend / title font | 14 / 14 / 16 pt | rcParams after `theme.use()` |
+| titles | bold, left-aligned; optional gray "n = X respondents" subtitle | `title=`, `subtitle=`, `n=` on chart functions |
+| spines | top/right off ("report" profile) | rcParams |
+| line width | 2.5 ("report" profile) | `linewidth=` / rcParams |
 | publication style | spineless, tickless, bold titles, pads 10/15 | `theme.use("publication")` |
 | brand font | Neutraface Text (must be installed) | `theme.use(profile, font=...)` |
 | dot marker | `"."`, size 10, edge width 0 | `marker=`, `markersize=` |
@@ -26,10 +29,12 @@ default, verbatim.
 | grouped-dot series | `tab:grey` (Everyone) → blue, olive, orange, green, red, purple | `colors=` / `theme.palette["series"]` |
 | grouped-dot layout | figsize (9,4), no box, legend frameless @ (1, 0.85), xlim (−1,101), "Percent" labelpad 10, n= in legend, 25-char label wrap | `figsize=`, `box=True`, `legend_anchor=`, `xrange=`, `xlabel=`, `show_n=False`, `wrap=` |
 | parallel bars | width 0.75, alpha 0.5, panel titles 12pt pad 1, suptitle 18 bold | kwargs |
-| rolling trend | figsize (10,6), plain lines (mpl cycle, no markers), legend @ (1,1), no grid | `colors=`, `marker=`, `legend_anchor=`, `grid=True`, `shade=` |
-| split lines | figsize (8,6), `#E5E5E5`-first series, o-markers, frameless legend | `colors=` / `theme.palette["split_series"]` |
-| Likert bars | 4-pt `tab:red→orange→olive→green`, figsize (12, 0.8+n), white int labels (zero-width suppressed), legend outside upper-right | `colors=` / `palette["likert4"]`, `min_label_width=`, `legend_anchor=` |
-| venn | 7×7, equal circles, % of sample labels, title 20pt pad 30, layout pad 5 | `weighted=True`, `as_percent=False` |
+| rolling trend | figsize (10,6), thick (2.5) plain lines in the tableau cycle (no markers), frameless inside legend, no grid, no top/right spines, bold left title + gray subtitle | `colors=`, `marker=`, `linewidth=`, `legend_loc=`, `grid=True`, `shade=`, `subtitle=`/`n=` |
+| split lines | figsize (10,6), thick plain lines in the tableau cycle (no markers) | `colors=theme.palette["split_series"]` for the legacy gray-first look, `marker="o"` |
+| Likert bars | 4-pt `tab:red→orange→olive→green`; 5-pt adds `tab:blue`; figsize (12, 0.8+n), white int labels (zero-width suppressed), legend outside upper-right | `colors=`, `min_label_width=`, `legend="top"/"none"` |
+| stacked band bars | red→orange→olive→green→blue 5-band scale, horizontal legend on top, x 0-100, bold title + gray n-subtitle | `stacked_bars(table, colors=, legend=, bar_labels=True)`; build tables with `banded_shares` |
+| waffle | tab10 sequence (blue, red, purple, orange, ...), right-side frameless legend with values in labels, bold left title, `block_value=` scaling | `colors=`, `show_values=False`, `rows=` |
+| venn | 7×7, **area-proportional**, brand set colors (steel blue/turquoise/green, alpha 0.6), % of sample labels, n-subtitle | `weighted=False`, `colors=`, `set_percentages=True` |
 | funnel | half-width 11, bands 2.8 gap 0.2, white 10pt labels, title 12pt | kwargs |
 | donut | wedge width 0.5, start 90° clockwise, no % labels | `autopct="%1.0f%%"` |
 | scale bar | figsize (8, 0.4), 0.2 lw black edges, 5pt labels, Spectral-25 | kwargs |

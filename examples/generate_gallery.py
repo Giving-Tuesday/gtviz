@@ -92,8 +92,10 @@ def main() -> None:
 
     fig, _ = gtviz.rolling_trend(df, ["gave_money", "volunteered"],
                                  labels={"gave_money": "Gave money", "volunteered": "Volunteered"},
-                                 title="rolling_trend")
-    emit(fig, "rolling_trend", "3-week rolling weighted trends")
+                                 title="rolling_trend",
+                                 subtitle="Rolling three-week average  |  n = 4,000 respondents")
+    emit(fig, "rolling_trend", "Thick tableau-palette lines, no markers/grid, "
+         "bold left title with gray subtitle")
 
     fig, _ = gtviz.split_line_plot(df, "gave_money", split="age_group", title="split_line_plot")
     emit(fig, "split_line_plot", "One trend line per group level")
@@ -103,8 +105,14 @@ def main() -> None:
     emit(fig, "annotated_event_plot", "Trend with labeled event markers")
 
     fig, _ = gtviz.venn(df, ["gave_money", "volunteered", "gave_items"],
-                        labels=["Money", "Volunteer", "Items"], title="venn")
-    emit(fig, "venn", "3-set behaviour overlap (percent of sample)")
+                        labels=["Money", "Items", "Volunteering"], title="venn")
+    emit(fig, "venn", "Area-proportional 3-set overlap, brand set colors, "
+         "n-subtitle (percent of sample per region)")
+
+    fig, _ = gtviz.venn(df, ["gave_money", "gave_items", "volunteered"],
+                        labels=["Gave Money", "Gave Items", "Volunteered"],
+                        set_percentages=True, title="venn_set_percentages")
+    emit(fig, "venn_set_percentages", "Per-set totals under each label")
 
     fig, _ = gtviz.weighted_heatmap(df, "region",
                                     ["gave_money", "volunteered", "gave_items", "solicited"],
@@ -126,6 +134,57 @@ def main() -> None:
         answer_labels=["Strongly disagree", "Disagree", "Neutral", "Agree", "Strongly agree"],
         title="likert_bars")
     emit(fig, "likert_bars", "100% stacked Likert distributions")
+
+    dfb = df.copy()
+    dfb["civic_score"] = dfb["belonging"] * 20
+    bands = gtviz.banded_shares(dfb, "region", "civic_score")
+    fig, _ = gtviz.stacked_bars(bands, title="stacked_bars", n=len(dfb))
+    emit(fig, "stacked_bars", "100% stacked band bars: red-to-blue 5-band scale, "
+         "horizontal legend on top")
+
+    try:
+        fig = gtviz.waffle(
+            {"Remittances": 690, "Individual Giving": 392, "Within-country": 252,
+             "Religious": 146, "DAF": 65, "Foundations": 110, "Corporate": 44,
+             "Bequests": 46, "ODA": 174},
+            rows=20, block_value=2, value_format="{k} (${v:g}B)",
+            title="waffle (1 box = $2B)")
+        emit(fig, "waffle", "Aid-flows waffle: tab10 sequence, right legend with values")
+    except ImportError:
+        pass
+
+    fig, _ = gtviz.contribution_bars(
+        [27, 10, 22, 13], ["Random act of kindness", "Expect to give more next year",
+                           "I help people I disagree with", "Most people can be trusted"],
+        benchmarks=[64, 64, 66, 67], title="contribution_bars")
+    emit(fig, "contribution_bars", "Signed white labels in-bar; gray benchmark bubbles")
+
+    bench = pd.DataFrame({"low": [60, 54, 48], "high": [84, 74, 73]},
+                         index=["Initiated a helping effort", "Recent act was local",
+                                "Acted generously last month"])
+    fig, _ = gtviz.range_dot_plot(bench, "low", "high", benchmark=62,
+                                  right_labels=["8%", "40%", "56%"], title="range_dot_plot")
+    emit(fig, "range_dot_plot", "Dumbbell ranges: red/green endpoint scores in gray "
+         "bubbles, gap labeled, dotted benchmark")
+
+    arr = pd.DataFrame({"b0": [47, 48, 50], "b1": [52, 60, 46], "c0": [57, 60, 62],
+                        "c1": [66, 76, 55]},
+                       index=["Aware of recent disaster", "Responded with generosity",
+                              "Not solicited in 3 months"])
+    fig, _ = gtviz.arrow_range_plot(
+        arr, {"Belonging": ("b0", "b1", "tab:green"), "Civic": ("c0", "c1", "tab:blue")},
+        averages={"Belonging\naverage": (49, "tab:green"),
+                  "Civic Intent\naverage": (62, "tab:blue")},
+        title="arrow_range_plot")
+    emit(fig, "arrow_range_plot", "Directional arrows; decreases turn red")
+
+    nest = pd.DataFrame({"GivingTuesday aware": [33, 8, 16, 26, 35, 58],
+                         "Aware and inspired": [19, 0, 3, 13, 20, 45],
+                         "Aware and very inspired": [8, 0, 1, 2, 7, 28]},
+                        index=["Everyone", "0-20", "20-40", "40-60", "60-80", "80-100"])
+    fig, _ = gtviz.nested_bars(nest, ylabel="Percent aware / inspired",
+                               xlabel="Civic Intent", title="nested_bars")
+    emit(fig, "nested_bars", "Layered subset bars: gray total, cyan subset, blue core")
 
     tab = gtviz.choropleth_table(df, "gave_money", region_col="Fips")
     fig, _ = gtviz.scale_bar(tab.attrs["scale_min"] * 100, tab.attrs["scale_max"] * 100,
