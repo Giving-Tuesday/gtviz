@@ -26,6 +26,7 @@ import pandas as pd
 
 from .._mpl import resolve_ax
 from ..theme import palette
+from ._legend import apply_legend
 
 __all__ = ["dot_plot", "grouped_dot_plot", "trend_dot_plot"]
 
@@ -99,6 +100,8 @@ def dot_plot(
     ax.set_xlim(*xrange)
     ax.tick_params(axis="y", which="major", right="on", left="on", color=palette["grid"])
     ax.grid(axis="y", which="major", color=palette["grid"], zorder=-10, linestyle=":")
+    # dot plots read as a scale: keep the bottom axis even under the sparse theme
+    ax.spines["bottom"].set_visible(True)
     ax.set_xlabel(xlabel)
     if title:
         ax.set_title(title)
@@ -126,6 +129,8 @@ def grouped_dot_plot(
     title: str | None = None,
     xlabel: str = "Percent",
     legend_anchor: tuple = (1, 0.85),
+    legend_wrap: int | None = None,
+    legend_truncate: int | None = None,
     figsize: tuple = (9, 4),
 ):
     """One dot series per group across a set of metrics.
@@ -182,7 +187,7 @@ def grouped_dot_plot(
                  label=legend_label)
 
     ax.set_xlabel(xlabel, labelpad=10)
-    ax.legend(bbox_to_anchor=legend_anchor, frameon=False)
+    apply_legend(ax, wrap=legend_wrap, truncate=legend_truncate, bbox_to_anchor=legend_anchor)
     if not box:
         for spine in ax.spines.values():
             spine.set_visible(False)
@@ -210,6 +215,8 @@ def trend_dot_plot(
     title: str | None = None,
     xlabel: str = "Percent",
     legend_anchor: tuple = (1, 0.85),
+    legend_wrap: int | None = None,
+    legend_truncate: int | None = None,
     figsize: tuple = (9, 4),
 ):
     """Metrics-by-period dot columns (port of ``trends_dot_plot``).
@@ -248,7 +255,7 @@ def trend_dot_plot(
     ax.tick_params(axis="y", which="major", right="on", left="on", color=palette["grid"])
     ax.grid(axis="y", color=palette["grid"], linestyle=":", zorder=-10)
     ax.set_xlabel(xlabel, labelpad=10)
-    ax.legend(bbox_to_anchor=legend_anchor, frameon=False, title=time_col)
+    apply_legend(ax, wrap=legend_wrap, truncate=legend_truncate, bbox_to_anchor=legend_anchor, title=time_col)
     if not box:
         for spine in ax.spines.values():
             spine.set_visible(False)
