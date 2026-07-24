@@ -264,9 +264,10 @@ class AssignPew(PipelineStep):
     """Assign each respondent the closest Pew political typology.
 
     Vectorized port of ``assign_pew``: the notebook's per-respondent tqdm
-    loop becomes one matrix computation (identical distances, ~1000x faster).
-    Adds one ``{type}_dist`` column per typology, one-hot ``best_pew_*``
-    columns, and an ordered-categorical ``best_pew``.
+    loop becomes one matrix computation (identical result, ~1000x faster).
+    Adds one ``{type}_fit`` column per typology (a 0-1 agreement-match score,
+    higher = closer fit), one-hot ``best_pew_*`` columns, and an
+    ordered-categorical ``best_pew`` naming each respondent's closest type.
 
     Parameters
     ----------
@@ -324,33 +325,48 @@ class AssignPew(PipelineStep):
 
     def transform(self, df: pd.DataFrame) -> pd.DataFrame:
         out = df.copy()
-        center = ({1: 1.0, 2: 0.5, 3: 0.0} if self.pipeline_version >= 2026
-                  else {3: 1.0, 2: 0.5, 1: 0.0})
-        centered = np.column_stack([
+
+        # Map each answer code to agreement on a 0-1 scale (1=agree, 0=disagree,
+        # 0.5=not sure). The 2026 pipeline codes 1/2/3 = agree/not-sure/disagree;
+        # earlier pipelines reverse it.
+        agreement_map = ({1: 1.0, 2: 0.5, 3: 0.0} if self.pipeline_version >= 2026
+                         else {3: 1.0, 2: 0.5, 1: 0.0})
+        respondent_agreement = np.column_stack([
             pd.to_numeric(out[q + "_scale"], errors="coerce")
-            .replace(center)
+            .replace(agreement_map)
             .infer_objects()
             .fillna(0.5)
             .values
             for q in self.QUESTIONS
-        ])  # (n, 8)
+        ])  # (n_respondents, n_questions)
 
-        ref = self._load()  # (types, 8)
-        types = list(ref.index)
-        T = ref.values[np.newaxis, :, :]          # (1, t, 8)
-        R = centered[:, np.newaxis, :]            # (n, 1, 8)
-        dists = ((((R - T) ** 2) - 1) ** 2).sum(axis=2) / 8   # (n, t) -- notebook metric
+        reference = self._load()                     # (n_types, n_questions)
+        type_names = list(reference.index)
+        type_agreement = reference.values            # each type's 0-1 agreement per question
 
-        for j, t in enumerate(types):
-            out[f"{t}_dist"] = dists[:, j]
-        best = np.array(types, dtype=object)[dists.argmax(axis=1)]  # notebook picks max
-        dummies = pd.get_dummies(pd.Series(best, index=out.index), prefix=self.out_col)
+        # Broadcast respondents against types to score every (respondent, type)
+        # pair at once (replaces the notebook's per-respondent loop).
+        resp = respondent_agreement[:, np.newaxis, :]   # (n_respondents, 1, n_questions)
+        typ = type_agreement[np.newaxis, :, :]          # (1, n_types, n_questions)
+
+        # Per-question agreement match: ((diff**2 - 1)**2) == 1 when respondent
+        # and type agree (diff~0) and 0 when they disagree (diff~1). Averaging
+        # over the 8 questions gives a fit score in [0, 1] where HIGHER = closer
+        # fit. (This is the original notebook metric; its variable was named
+        # "dist" but it is a similarity, not a distance -- hence argmax below.)
+        fit_score = ((((resp - typ) ** 2) - 1) ** 2).mean(axis=2)   # (n_respondents, n_types)
+
+        for j, type_name in enumerate(type_names):
+            out[f"{type_name}_fit"] = fit_score[:, j]
+        best_type = np.array(type_names, dtype=object)[fit_score.argmax(axis=1)]
+        dummies = pd.get_dummies(pd.Series(best_type, index=out.index), prefix=self.out_col)
         out = pd.concat([out, dummies], axis=1)
         # Order by the canonical Pew spectrum where the decoder's type names
         # match; otherwise fall back to the decoder's own order so no rows are
         # silently dropped to NaN.
-        categories = self.ORDERED_TYPES if set(types) <= set(self.ORDERED_TYPES) else types
-        out[self.out_col] = pd.Categorical(best, categories=categories, ordered=True)
+        categories = (self.ORDERED_TYPES if set(type_names) <= set(self.ORDERED_TYPES)
+                      else type_names)
+        out[self.out_col] = pd.Categorical(best_type, categories=categories, ordered=True)
         if self.verbose:
             print(out[self.out_col].value_counts())
         return out
