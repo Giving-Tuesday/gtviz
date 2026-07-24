@@ -39,7 +39,7 @@ from .config import options, set_options
 from .maps import choropleth_table, scale_bar
 from .tables import HtmlTable, compare_periods, pivot_change_table
 
-__version__ = "0.6.0"
+__version__ = "0.8.0"
 
 __all__ = [
     "__version__",
