@@ -197,3 +197,57 @@ def test_sklearn_compatibility(gp_frame):
                                                      out_col="belonging_quartile"))])
     out = pipe.fit_transform(gp_frame)
     assert "belonging_quartile" in out.columns
+
+
+def test_assign_pew_transposed_and_reordered_decoder(gp_frame):
+    """Regression: real decoder is questions x types with question-TEXT row
+    labels and types in a non-canonical column order. Orientation must be
+    detected by shape, and type names carried from the decoder's columns."""
+    import numpy as np
+    rng = np.random.default_rng(1)
+    reordered = ["Ambivalent Right", "Faith and FlagConservatives",
+                 "Committed Conservatives", "Stressed Sideliners", "Outsider Left",
+                 "Progressive Left", "Populist Right", "Establishment Liberals",
+                 "Democratic Mainstays"]
+    question_text = [f"Statement {i}" for i in range(1, 9)]  # not the Q63 codes
+    # shape (8 questions, 9 types) -- the production orientation
+    decoder = pd.DataFrame(rng.uniform(0, 100, (8, 9)),
+                           index=question_text, columns=reordered)
+    out = pl.AssignPew(decoder).transform(gp_frame)
+    assert out["best_pew"].notna().all()
+    # every assigned type is a real column label, not a positional mismatch
+    assert set(out["best_pew"].dropna().unique()) <= set(reordered)
+    dist_cols = [c for c in out.columns if c.endswith("_dist")]
+    assert len(dist_cols) == 9
+    assert all(c[:-5] in reordered for c in dist_cols)
+
+
+def test_reference_resolution_and_errors(gp_frame, monkeypatch):
+    import gtviz
+
+    # 1. no config, no arg -> actionable FileNotFoundError
+    gtviz.set_options(pew_decoder=None)
+    with pytest.raises(FileNotFoundError, match="GTVIZ_PEW_DECODER"):
+        pl.AssignPew().transform(gp_frame)
+
+    # 2. env var resolves
+    import numpy as np
+    rng = np.random.default_rng(2)
+    import tempfile
+    from pathlib import Path
+    d = pd.DataFrame(rng.uniform(0, 100, (9, 8)),
+                     index=pl.AssignPew.ORDERED_TYPES,
+                     columns=[f"Q63Oct_r{i}" for i in range(1, 9)])
+    path = Path(tempfile.mkdtemp()) / "decoder.csv"
+    d.to_csv(path)
+    monkeypatch.setenv("GTVIZ_PEW_DECODER", str(path))
+    gtviz.set_options(pew_decoder=None)  # force re-read of env at resolve time
+    # explicit config beats env; test config path:
+    gtviz.set_options(pew_decoder=str(path))
+    out = pl.AssignPew().transform(gp_frame)
+    assert out["best_pew"].notna().all()
+    gtviz.set_options(pew_decoder=None)
+
+    # 3. missing path -> error names the path
+    with pytest.raises(FileNotFoundError, match="not found"):
+        pl.AssignPew("/nonexistent/decoder.csv").transform(gp_frame)

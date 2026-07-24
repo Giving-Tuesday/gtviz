@@ -57,20 +57,29 @@ def default_pipeline(
     """The standard GivingPulse scoring batch, in notebook order:
     activism -> county types -> belonging -> civic intent -> pew -> quartiles.
 
-    Steps needing reference data (``AssignCountyTypes``, ``AssignPew``) are
-    included only when their source (path or DataFrame) is provided.
+    ``AssignCountyTypes`` and ``AssignPew`` are included when a reference
+    source is available -- passed here explicitly, or resolvable from
+    ``gtviz.options`` / the ``GTVIZ_COUNTY_TYPOLOGY`` / ``GTVIZ_PEW_DECODER``
+    environment variables. Pass ``typology=False`` / ``pew_decoder=False`` to
+    force-skip a step even when a reference is configured.
     """
+    from ..config import options
+
     steps: list[tuple[str, PipelineStep]] = [
         ("activism", AssignActivism(verbose=verbose)),
     ]
-    if typology is not None:
-        steps.append(("county_types", AssignCountyTypes(typology, verbose=verbose)))
+    want_county = typology is not False and (typology is not None or options.county_typology is not None)
+    if want_county:
+        arg = None if (typology is None or typology is True) else typology
+        steps.append(("county_types", AssignCountyTypes(arg, verbose=verbose)))
     steps += [
         ("belonging", ScoreBelonging(verbose=verbose)),
         ("civic_intent", ScoreCivicIntent(verbose=verbose)),
     ]
-    if pew_decoder is not None:
-        steps.append(("pew", AssignPew(pew_decoder, pipeline_version=pipeline_version,
+    want_pew = pew_decoder is not False and (pew_decoder is not None or options.pew_decoder is not None)
+    if want_pew:
+        arg = None if (pew_decoder is None or pew_decoder is True) else pew_decoder
+        steps.append(("pew", AssignPew(arg, pipeline_version=pipeline_version,
                                        verbose=verbose)))
     steps.append(("civic_quartile", CivicQuartile()))
     return Pipeline(steps, verbose=verbose)

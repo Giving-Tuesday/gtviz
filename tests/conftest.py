@@ -7,16 +7,19 @@ from __future__ import annotations
 from pathlib import Path
 
 import matplotlib
-import matplotlib.pyplot as plt
+
+matplotlib.use("Agg")  # headless everywhere
+
 import numpy as np
 import pandas as pd
 import pytest
 
-# CONFIG SETTINGS
-matplotlib.use("Agg")  # headless everywhere
+# Mirror the pandas-3 runtime: surface (not silence) downcasting behavior so
+# the test environment matches what production/newer pandas will do. The
+# opt-in flag exists only on pandas 2.x (on 3.x it is the default and the
+# option itself is deprecated), so gate on the major version.
 if int(pd.__version__.split(".")[0]) < 3:
     pd.set_option("future.no_silent_downcasting", True)
-plt.rcParams["font.family"] = "DejaVu Sans"   # bundled in matplotlib, identical on every OS
 
 OUTPUT_DIR = Path(__file__).parent / "output"
 

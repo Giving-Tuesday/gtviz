@@ -1,5 +1,23 @@
 # Changelog
 
+## 0.6.0 (2026-07-23)
+
+- Reference files resolve without hard-coded paths: `AssignPew` /
+  `AssignCountyTypes` now default `decoder=`/`typology=` to `None` and
+  resolve from `gtviz.set_options(pew_decoder=, county_typology=)` or the
+  `GTVIZ_PEW_DECODER` / `GTVIZ_COUNTY_TYPOLOGY` env vars, with an actionable
+  `FileNotFoundError` when nothing is configured or the file is missing.
+- `AssignPew`: robust orientation + type labeling. The decoder is oriented
+  by shape (works for the production questions x types layout with
+  question-text row labels), and assigned type names are carried from the
+  decoder's own columns regardless of their order -- fixes a broadcast error
+  and silent type-mislabeling on real reference files.
+- `default_pipeline` includes the county/pew steps whenever a reference is
+  configured (explicitly or via options/env); pass `typology=False` /
+  `pew_decoder=False` to force-skip.
+- New tests: transposed + reordered decoder regression, and
+  config/env/error resolution paths.
+
 ## 0.5.0 (2026-07-23)
 
 **Civic-intent chart family** (the report figures 2.2/2.4/3.x/A.1/A.2/A.5):

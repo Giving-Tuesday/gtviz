@@ -199,9 +199,10 @@ class AssignCountyTypes(PipelineStep):
     Parameters
     ----------
     typology:
-        Path to the typology Excel/CSV file **or** an already-loaded
-        DataFrame with columns ``County name``, ``2023 Typology``, ``Fips``
-        (replaces the hard-coded ``/Volumes/...`` path).
+        Typology Excel/CSV (columns ``County name``, ``2023 Typology``,
+        ``Fips``) as a path **or** an already-loaded DataFrame. When ``None``
+        (default), resolves from ``gtviz.options.county_typology`` / the
+        ``GTVIZ_COUNTY_TYPOLOGY`` env var.
     type_col_in / type_col_out:
         Source and destination column names for the typology label.
     """
@@ -210,7 +211,7 @@ class AssignCountyTypes(PipelineStep):
 
     def __init__(
         self,
-        typology: str | pd.DataFrame,
+        typology: str | pd.DataFrame | None = None,
         type_col_in: str = "2023 Typology",
         type_col_out: str = "county_type",
         verbose: bool = False,
@@ -221,7 +222,10 @@ class AssignCountyTypes(PipelineStep):
         self.verbose = verbose
 
     def _load(self) -> pd.DataFrame:
-        t = self.typology
+        from ..config import resolve_reference
+
+        t = resolve_reference(self.typology, "county_typology", "GTVIZ_COUNTY_TYPOLOGY",
+                             "County typology file")
         if isinstance(t, pd.DataFrame):
             ref = t.copy()
         elif str(t).endswith((".xlsx", ".xls")):
@@ -267,8 +271,10 @@ class AssignPew(PipelineStep):
     Parameters
     ----------
     decoder:
-        Path to the Pew reference CSV (percent-agree by type, index = type)
-        **or** an equivalent DataFrame (values 0-100).
+        Pew reference (percent-agree matrix, values 0-100) as a path **or**
+        a DataFrame. Orientation (types x questions vs its transpose) is
+        detected by shape. When ``None`` (default), resolves from
+        ``gtviz.options.pew_decoder`` / the ``GTVIZ_PEW_DECODER`` env var.
     pipeline_version:
         2026 pipeline codes answers Agree=1/Not sure=2/Disagree=3; earlier
         pipelines are reversed. Controls the centering map.
@@ -283,7 +289,7 @@ class AssignPew(PipelineStep):
 
     def __init__(
         self,
-        decoder: str | pd.DataFrame,
+        decoder: str | pd.DataFrame | None = None,
         pipeline_version: int = 2026,
         out_col: str = "best_pew",
         verbose: bool = False,
@@ -294,13 +300,27 @@ class AssignPew(PipelineStep):
         self.verbose = verbose
 
     def _load(self) -> pd.DataFrame:
-        d = self.decoder
+        from ..config import resolve_reference
+
+        d = resolve_reference(self.decoder, "pew_decoder", "GTVIZ_PEW_DECODER",
+                              "Pew decoder file")
         ref = d.copy() if isinstance(d, pd.DataFrame) else pd.read_csv(d, index_col=0)
         ref = ref / 100
-        # accept either orientation; production CSV is questions x types
-        if set(self.QUESTIONS) & set(ref.index):
-            ref = ref.T
-        return ref  # -> index: type, columns: questions
+        # Normalize orientation to (types x 8 questions). The production CSV
+        # loads as questions(8) x types(9), matching the original notebook's
+        # unconditional `.T`. Orient by SHAPE (there are exactly 8 pew
+        # questions) rather than by matching label strings, which vary
+        # between decoder-file versions.
+        n_q = len(self.QUESTIONS)
+        if ref.shape[0] == n_q and ref.shape[1] != n_q:
+            ref = ref.T          # questions x types -> types x questions
+        elif ref.shape[1] != n_q:
+            raise ValueError(
+                f"Pew decoder must have {n_q} question columns or rows; "
+                f"got shape {ref.shape}. Expected {n_q} questions x N types "
+                "(or its transpose)."
+            )
+        return ref  # -> index: type, columns: questions (width 8)
 
     def transform(self, df: pd.DataFrame) -> pd.DataFrame:
         out = df.copy()
@@ -326,7 +346,11 @@ class AssignPew(PipelineStep):
         best = np.array(types, dtype=object)[dists.argmax(axis=1)]  # notebook picks max
         dummies = pd.get_dummies(pd.Series(best, index=out.index), prefix=self.out_col)
         out = pd.concat([out, dummies], axis=1)
-        out[self.out_col] = pd.Categorical(best, categories=self.ORDERED_TYPES, ordered=True)
+        # Order by the canonical Pew spectrum where the decoder's type names
+        # match; otherwise fall back to the decoder's own order so no rows are
+        # silently dropped to NaN.
+        categories = self.ORDERED_TYPES if set(types) <= set(self.ORDERED_TYPES) else types
+        out[self.out_col] = pd.Categorical(best, categories=categories, ordered=True)
         if self.verbose:
             print(out[self.out_col].value_counts())
         return out
