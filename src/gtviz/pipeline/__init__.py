@@ -31,7 +31,7 @@ from __future__ import annotations
 import pandas as pd
 
 from .base import Pipeline, PipelineStep
-from .io import read_pipeline
+from .io import filter_meta, read_pipeline
 from .steps import (
     AssignActivism,
     AssignCountyTypes,
@@ -42,7 +42,7 @@ from .steps import (
 )
 
 __all__ = [
-    "Pipeline", "PipelineStep", "read_pipeline", "process", "default_pipeline",
+    "Pipeline", "PipelineStep", "read_pipeline", "filter_meta", "process", "default_pipeline",
     "ScoreBelonging", "ScoreCivicIntent", "AssignCountyTypes", "AssignPew",
     "AssignActivism", "CivicQuartile",
 ]
