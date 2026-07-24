@@ -18,6 +18,7 @@ import pandas as pd
 from .._mpl import brand_title, resolve_ax
 from ..stats.summaries import rolling_summary
 from ..theme import palette
+from ._legend import apply_legend
 
 __all__ = ["rolling_trend", "split_line_plot", "annotated_event_plot"]
 
@@ -36,7 +37,10 @@ def rolling_trend(
     shade_color: str = "grey",
     shade_alpha: float = 0.2,
     grid: bool = False,
+    box: bool = False,
     legend_loc: str | tuple = "best",
+    legend_wrap: int | None = None,
+    legend_truncate: int | None = None,
     ax=None,
     title: str | None = None,
     subtitle: str | None = None,
@@ -97,10 +101,11 @@ def rolling_trend(
         ax.set_xlabel(xlabel)
     if grid:
         ax.grid(axis="y", color=palette["grid"], linestyle=":", zorder=-10)
-    if isinstance(legend_loc, tuple):
-        ax.legend(bbox_to_anchor=legend_loc)
-    else:
-        ax.legend(loc=legend_loc)
+    if box:
+        for _s in ax.spines.values():
+            _s.set_visible(True)
+    _lk = {"bbox_to_anchor": legend_loc} if isinstance(legend_loc, tuple) else {"loc": legend_loc}
+    apply_legend(ax, wrap=legend_wrap, truncate=legend_truncate, **_lk)
     if ylim:
         ax.set_ylim(*ylim)
     brand_title(ax, title, subtitle=subtitle, n=n)
@@ -121,7 +126,10 @@ def split_line_plot(
     marker: str | None = None,
     linewidth: float | None = None,
     grid: bool = False,
+    box: bool = False,
     legend_loc: str | tuple = "best",
+    legend_wrap: int | None = None,
+    legend_truncate: int | None = None,
     ax=None,
     title: str | None = None,
     subtitle: str | None = None,
@@ -162,12 +170,13 @@ def split_line_plot(
         if linewidth:
             kwargs["linewidth"] = linewidth
         ax.plot(series.index, series.values, **kwargs)
-    if isinstance(legend_loc, tuple):
-        ax.legend(bbox_to_anchor=legend_loc)
-    else:
-        ax.legend(loc=legend_loc)
+    _lk = {"bbox_to_anchor": legend_loc} if isinstance(legend_loc, tuple) else {"loc": legend_loc}
+    apply_legend(ax, wrap=legend_wrap, truncate=legend_truncate, **_lk)
     if grid:
         ax.grid(axis="y", color=palette["grid"], linestyle=":", zorder=-10)
+    if box:
+        for _s in ax.spines.values():
+            _s.set_visible(True)
     ax.set_xlabel(time_col.replace("_", " ").title())
     ax.set_ylabel(value_col)
     brand_title(ax, title, subtitle=subtitle, n=n)
@@ -182,6 +191,7 @@ def annotated_event_plot(
     time_col: str = "real_date",
     window: int = 3,
     grid: bool = False,
+    box: bool = False,
     ax=None,
     title: str | None = None,
     subtitle: str | None = None,
@@ -208,6 +218,9 @@ def annotated_event_plot(
     ax.set_ylabel(f"% {value_col}")
     if grid:
         ax.grid(axis="y", color=palette["grid"], linestyle=":", zorder=-10)
+    if box:
+        for _s in ax.spines.values():
+            _s.set_visible(True)
     brand_title(ax, title, subtitle=subtitle, n=n)
     fig.tight_layout()
     return fig, ax
