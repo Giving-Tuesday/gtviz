@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "gtviz"
-version = "0.6.0"
+version = "0.8.0"
 description = "Publication-quality survey data visualization: dot plots, comparison tables, venn diagrams, choropleth color tables, HTML/PDF/PNG/SVG export."
 readme = "README.md"
 license = { text = "MIT" }
