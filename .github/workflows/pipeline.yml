@@ -38,7 +38,8 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
-      - run: pip install -e .[dev] "${{ matrix.pandas }}" scikit-learn openpyxl
+      - run: pip install "${{ matrix.pandas }}"
+      - run: pip install -e .[dev] scikit-learn openpyxl
       - name: Pipeline unit tests
         run: pytest tests/test_pipeline.py -v --cov=gtviz.pipeline --cov-report=term-missing
       - name: sklearn interoperability check
