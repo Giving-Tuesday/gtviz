@@ -44,6 +44,22 @@ filters. Reference files are **parameters, not hard-coded paths**, and every
 reference argument accepts a path *or* an in-memory DataFrame — which is how
 the test suite runs the whole pipeline with zero production access.
 
+## Working with metadata
+
+`read_pipeline` returns the **full** metadata frame unchanged. The GivingPulse
+metadata repeats each question across its answer options, where the trailing
+number of ``col_name`` should match the leading digit of ``encoded``.
+``filter_meta`` narrows to the self-consistent rows (and optionally one
+question family):
+
+```python
+df, meta = gtviz.pipeline.read_pipeline(year=2026)
+eth = gtviz.pipeline.filter_meta(meta, contains="ethnie")   # ethnie_* coded rows
+codebook = gtviz.pipeline.filter_meta(meta)                 # all families, matched coding
+```
+
+`meta` itself is never mutated, so the complete metadata stays available.
+
 ## sklearn-style composition
 
 Steps follow the scikit-learn transformer contract
