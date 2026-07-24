@@ -119,13 +119,13 @@ def test_assign_pew(gp_frame, pew_ref):
     out = pl.AssignPew(pew_ref).transform(gp_frame)
     assert out["best_pew"].notna().all()
     assert out["best_pew"].cat.ordered
-    dist_cols = [c for c in out.columns if c.endswith("_dist")]
-    assert len(dist_cols) == 9
+    fit_cols = [c for c in out.columns if c.endswith("_fit")]
+    assert len(fit_cols) == 9
     assert any(c.startswith("best_pew_") for c in out.columns)  # one-hot
 
 
 def test_assign_pew_matches_notebook_metric(pew_ref):
-    """Vectorized distances equal the notebook's per-row formula."""
+    """Vectorized fit scores equal the notebook's per-row formula."""
     rng = np.random.default_rng(0)
     df = pd.DataFrame({f"Q63Oct_r{i}_scale": rng.integers(1, 4, 20) for i in range(1, 9)})
     out = pl.AssignPew(pew_ref).transform(df)
@@ -134,8 +134,8 @@ def test_assign_pew_matches_notebook_metric(pew_ref):
     for i in range(5):  # spot check rows
         resp = np.array([center[df.loc[i, f"Q63Oct_r{j}_scale"]] for j in range(1, 9)])
         for t in ref.index:
-            manual = float((((resp - ref.loc[t].values) ** 2 - 1) ** 2).sum() / 8)
-            assert np.isclose(out.loc[i, f"{t}_dist"], manual)
+            manual = float((((resp - ref.loc[t].values) ** 2 - 1) ** 2).mean())
+            assert np.isclose(out.loc[i, f"{t}_fit"], manual)
 
 
 def test_assign_activism(gp_frame):
@@ -217,9 +217,9 @@ def test_assign_pew_transposed_and_reordered_decoder(gp_frame):
     assert out["best_pew"].notna().all()
     # every assigned type is a real column label, not a positional mismatch
     assert set(out["best_pew"].dropna().unique()) <= set(reordered)
-    dist_cols = [c for c in out.columns if c.endswith("_dist")]
-    assert len(dist_cols) == 9
-    assert all(c[:-5] in reordered for c in dist_cols)
+    fit_cols = [c for c in out.columns if c.endswith("_fit")]
+    assert len(fit_cols) == 9
+    assert all(c[:-4] in reordered for c in fit_cols)
 
 
 def test_reference_resolution_and_errors(gp_frame, monkeypatch):
@@ -251,3 +251,24 @@ def test_reference_resolution_and_errors(gp_frame, monkeypatch):
     # 3. missing path -> error names the path
     with pytest.raises(FileNotFoundError, match="not found"):
         pl.AssignPew("/nonexistent/decoder.csv").transform(gp_frame)
+
+
+def test_filter_meta():
+    from gtviz.pipeline import filter_meta
+    meta = pd.DataFrame({
+        "col_name": ["ethnie_1", "ethnie_1", "ethnie_2", "ethnie_11", "gender_1", "ethnie_3"],
+        "encoded": [1.0, 10.0, 2.0, 1.0, 1.0, 9.0],  # match: last(col)==first(str(encoded))
+    })
+    # ethnie family, self-consistent coding only
+    out = filter_meta(meta, contains="ethnie")
+    # ethnie_1/1.0 (1==1)✓, ethnie_1/10.0 (1==1)✓, ethnie_2/2.0 (2==2)✓,
+    # ethnie_11/1.0 (last '1'==first '1')✓, ethnie_3/9.0 (3!=9)✗
+    assert len(out) == 4
+    assert "gender_1" not in out["col_name"].values
+    assert (out["col_name"].str[-1] == out["encoded"].astype(str).str[0]).all()
+    # input untouched
+    assert len(meta) == 6
+    # contains only, no code match
+    assert len(filter_meta(meta, contains="ethnie", match_code=False)) == 5
+    # code match across all families
+    assert len(filter_meta(meta, match_code=True)) == 5  # all but ethnie_3/9.0
