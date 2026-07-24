@@ -54,12 +54,18 @@ _PROFILES = {
         "font.size": 14,
         "legend.fontsize": 14,
         "axes.titlesize": 16,
-        # brand look from the published reports:
+        # brand look from the published reports: sparse by default --
+        # bold left title, no box (all four spines off), no grid, thick lines.
+        # Charts that need axis lines or a reference grid (dot plots) re-enable
+        # them locally; pass box=True on line charts to restore the frame.
         "axes.titlelocation": "left",
         "axes.titleweight": "bold",
         "axes.spines.top": False,
         "axes.spines.right": False,
-        "lines.linewidth": 2.5,
+        "axes.spines.left": False,
+        "axes.spines.bottom": False,
+        "axes.grid": False,
+        "lines.linewidth": 3,
         "legend.frameon": False,
     },
     "publication": {
