@@ -100,3 +100,57 @@ def read_pipeline(
     if meta_source:
         meta = s.read.table(meta_source).toPandas()
     return df, meta
+
+
+def filter_meta(
+    meta: pd.DataFrame,
+    contains: str | None = None,
+    col_name_col: str = "col_name",
+    encoded_col: str = "encoded",
+    match_code: bool = True,
+) -> pd.DataFrame:
+    """Filter a survey-metadata frame to rows whose coding is self-consistent.
+
+    GivingPulse metadata repeats each question across its answer options, and
+    the trailing number on ``col_name`` (e.g. ``ethnie_1``) is meant to line
+    up with the leading digit of the ``encoded`` value for that option. Rows
+    where they disagree are stray / mis-joined coding. This helper keeps only
+    the matching rows, and optionally narrows to one question family first.
+
+    Replaces the notebook one-liner::
+
+        meta[meta.col_name.str.contains('ethnie')
+             & (meta.col_name.str[-1] == meta.encoded.astype(str).str[0])]
+
+    Parameters
+    ----------
+    meta:
+        The metadata frame from :func:`read_pipeline` (full, unfiltered).
+    contains:
+        If given, first restrict to ``col_name`` containing this substring
+        (e.g. ``"ethnie"``). ``None`` keeps all question families.
+    col_name_col, encoded_col:
+        Column names, in case the schema differs.
+    match_code:
+        Keep only rows where the last char of ``col_name`` equals the first
+        char of ``str(encoded)`` (the self-consistency check). Set False to
+        only apply the ``contains`` filter.
+
+    Returns
+    -------
+    A filtered **copy**; the input ``meta`` is unchanged, so
+    :func:`read_pipeline` still returns the complete metadata.
+
+    Examples
+    --------
+    >>> df, meta = read_pipeline(year=2026)              # doctest: +SKIP
+    >>> eth = filter_meta(meta, contains="ethnie")       # doctest: +SKIP
+    """
+    out = meta
+    if contains is not None:
+        out = out[out[col_name_col].str.contains(contains, na=False)]
+    if match_code:
+        last = out[col_name_col].astype(str).str[-1]
+        first = out[encoded_col].astype(str).str[0]
+        out = out[last == first]
+    return out.copy()
