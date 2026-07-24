@@ -1,5 +1,28 @@
 # Changelog
 
+## 0.8.0 (2026-07-23)
+
+- Frameless legends confirmed as the global default (theme
+  `legend.frameon = False`).
+- Line and dot charts gain `legend_wrap=` (wrap long legend labels to N
+  chars, default off) and `legend_truncate=` (hard-truncate with an
+  ellipsis, default off), via a shared `charts._legend` helper.
+- New `gtviz.pipeline.filter_meta(meta, contains=..., match_code=True)`:
+  filters the survey-metadata frame to rows whose `col_name` trailing digit
+  matches the `encoded` leading digit (optionally within one question
+  family). `read_pipeline` still returns the full, unfiltered metadata.
+
+## 0.7.0 (2026-07-23)
+
+- **Sparse by default.** The "report" theme now turns off all four axes
+  spines and the grid, and sets line width to 3 -- so charts are clean with
+  no per-plot `plt.box(False)` / `plt.grid(False)` needed. Dot plots keep
+  their bottom scale axis and dotted reference grid (intrinsic to the type).
+- Line charts (`rolling_trend`, `split_line_plot`, `annotated_event_plot`)
+  gain a `box=` param (default False) to restore the frame when wanted; they
+  already had `grid=` (default False).
+- Default `lines.linewidth` 2.5 -> 3.
+  
 ## 0.6.0 (2026-07-23)
 
 - Reference files resolve without hard-coded paths: `AssignPew` /
