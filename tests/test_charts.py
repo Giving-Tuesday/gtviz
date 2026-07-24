@@ -220,3 +220,15 @@ def test_nested_bars(output_dir):
                                 title="GivingTuesday awareness by civic intent")
     assert len(ax.patches) == 18
     save_test_image(fig, output_dir, "nested_bars")
+
+
+def test_legend_wrap_and_truncate(survey, output_dir):
+    long = {"gave_money": "I personally gave money to a nonprofit organization",
+            "volunteered": "I volunteered my time for a cause or community group"}
+    fig, ax = gtviz.rolling_trend(survey, ["gave_money", "volunteered"], labels=long,
+                                  legend_truncate=20)
+    texts = [t.get_text() for t in ax.get_legend().get_texts()]
+    assert all(len(t) <= 21 for t in texts) and any("\u2026" in t for t in texts)
+    fig, ax = gtviz.rolling_trend(survey, ["gave_money", "volunteered"], labels=long,
+                                  legend_wrap=15)
+    assert any("\n" in t.get_text() for t in ax.get_legend().get_texts())
