@@ -10,19 +10,20 @@ composition, and never call `plt.show()`.
    :members:
 ```
 
-## Bar panels
-
-```{eval-rst}
-.. automodule:: gtviz.charts.bars
-   :members:
-```
-
 ## Trend lines
 
 ```{eval-rst}
 .. automodule:: gtviz.charts.lines
    :members:
 ```
+
+## Sparkline Bar Plot
+
+```{eval-rst}
+.. automodule:: gtviz.charts.sparkline_bar_plot
+   :members:
+```
+
 
 ## Venn diagrams
 
@@ -38,12 +39,9 @@ composition, and never call `plt.show()`.
    :members:
 ```
 
-## Funnel, donut, waffle, Likert
+## Donut, Waffle, Likert, Funnel
 
 ```{eval-rst}
-.. automodule:: gtviz.charts.funnel
-   :members:
-
 .. automodule:: gtviz.charts.donut
    :members:
 
@@ -52,4 +50,15 @@ composition, and never call `plt.show()`.
 
 .. automodule:: gtviz.charts.waffle
    :members:
+
+.. automodule:: gtviz.charts.funnel
+   :members:
 ```
+
+## Bar panels
+
+```{eval-rst}
+.. automodule:: gtviz.charts.bars
+   :members:
+```
+

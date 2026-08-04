@@ -1,5 +1,20 @@
 # Changelog
 
+
+## 0.8.1 (2026-08-04)
+
+- ``charts.sparkline_bar_plot``: new chart -- a bar chart whose bars are squished
+  sparklines (cross-category comparison + per-category variation over time).
+- ``stats.rolling_summary``: add ``group_col=`` (per-group ``[period x group]``
+  panels, or ``(group, metric)`` MultiIndex) and ``pooled=`` (respondent-weighted
+  rolling ratio). Both opt-in; the default call is unchanged.
+- ``charts.grouped_dot_plot``: fix default ``markersize`` (8 -> 15) so the dots
+  read at report scale. ``dot_plot`` and ``trend_dot_plot`` unchanged.
+- ``charts.stacked_bars``: add ``legend_ncol=`` to control the number of legend
+  columns (default unchanged); fix the ``legend='top'`` title/subtitle overlapping
+  a multi-row legend (title/subtitle are now placed above the measured legend).
+
+
 ## 0.8.0 (2026-07-23)
 
 - Frameless legends confirmed as the global default (theme

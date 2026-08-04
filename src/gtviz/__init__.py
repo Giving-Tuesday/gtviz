@@ -29,6 +29,7 @@ from .charts import (
     range_dot_plot,
     rolling_trend,
     split_line_plot,
+    sparkline_bar_plot,
     stacked_bars,
     trend_dot_plot,
     venn,
@@ -39,7 +40,7 @@ from .config import options, set_options
 from .maps import choropleth_table, scale_bar
 from .tables import HtmlTable, compare_periods, pivot_change_table
 
-__version__ = "0.8.0"
+__version__ = "0.8.1"
 
 __all__ = [
     "__version__",
@@ -52,7 +53,7 @@ __all__ = [
     "rolling_trend", "split_line_plot", "annotated_event_plot",
     "venn", "venn_from_counts", "weighted_heatmap",
     "funnel", "funnel_from_columns", "donut", "likert_bars",
-    "stacked_bars", "banded_shares",
+    "stacked_bars", "banded_shares", "sparkline_bar_plot",
     "contribution_bars", "range_dot_plot", "arrow_range_plot", "nested_bars",
     # tables
     "HtmlTable", "compare_periods", "pivot_change_table",

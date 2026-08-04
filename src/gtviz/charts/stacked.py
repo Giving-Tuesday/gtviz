@@ -15,6 +15,7 @@ with gray subtitle.
 
 from __future__ import annotations
 
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
@@ -59,6 +60,7 @@ def stacked_bars(
     min_label_width: float = 5,
     height: float = 0.65,
     legend: str = "top",
+    legend_ncol: int | None = None,
     xlabel: str = "Percent of the population in each range",
     title: str | None = None,
     subtitle: str | None = None,
@@ -84,6 +86,9 @@ def stacked_bars(
     legend:
         ``"top"`` (horizontal above the plot, report style), ``"right"``,
         or ``"none"``.
+    legend_ncol:
+        Number of legend columns. Defaults to ``min(len(bands), 5)`` for the
+        top legend and 1 for the right legend.
 
     Returns
     -------
@@ -95,8 +100,6 @@ def stacked_bars(
         colors = palette["bands5"] if len(bands) == 5 else [
             c for c in palette["bands5"]][:len(bands)] or None
     if colors is None or len(colors) < len(bands):
-        import matplotlib.pyplot as plt
-
         colors = list(plt.get_cmap("RdYlGn")(np.linspace(0.08, 0.92, len(bands))))
 
     fig, ax, _ = resolve_ax(ax, figsize=figsize or (10, 0.55 * len(cats) + 1.8))
@@ -115,20 +118,29 @@ def stacked_bars(
     ax.set_yticklabels(cats)
     ax.set_xlim(0, 100)
     ax.set_xlabel(xlabel)
+    top_leg = None
     if legend == "top":
-        ax.legend(loc="lower center", bbox_to_anchor=(0.5, 1.02),
-                  ncol=min(len(bands), 5), borderaxespad=0.0)
-        if title:
-            # leave room for the legend row under the title
-            brand_title(ax, None)
-            fig.suptitle(title, x=0.5, y=1.02, fontweight="bold")
-            if subtitle or n:
-                sub = subtitle or f"n = {n:,} respondents"
-                fig.text(0.5, 0.965, sub, ha="center", fontsize=10, color=palette["subtitle"])
+        top_leg = ax.legend(loc="lower center", bbox_to_anchor=(0.5, 1.02),
+                            ncol=legend_ncol or min(len(bands), 5), borderaxespad=0.0)
     elif legend == "right":
-        ax.legend(bbox_to_anchor=(1.02, 1), loc="upper left", borderaxespad=0.0)
+        ax.legend(bbox_to_anchor=(1.02, 1), loc="upper left",
+                  ncol=legend_ncol or 1, borderaxespad=0.0)
         brand_title(ax, title, subtitle=subtitle, n=n)
     else:
         brand_title(ax, title, subtitle=subtitle, n=n)
     fig.tight_layout()
+    if top_leg is not None:
+        # Place the title/subtitle ABOVE the (possibly multi-row) top legend, measured
+        # after layout, so they never overlap it regardless of legend rows or figure size.
+        sub = subtitle or (f"n = {n:,} respondents" if n else None)
+        if title or sub:
+            fig.canvas.draw()
+            y = top_leg.get_window_extent().transformed(fig.transFigure.inverted()).y1
+            if sub:
+                fig.text(0.5, y + 0.015, sub, ha="center", va="bottom",
+                         fontsize=10, color=palette["subtitle"])
+                y += 0.05
+            if title:
+                fig.text(0.5, y + 0.015, title, ha="center", va="bottom",
+                         fontweight="bold", fontsize=plt.rcParams.get("axes.titlesize", 14))
     return fig, ax
