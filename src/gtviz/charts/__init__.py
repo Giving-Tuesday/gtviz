@@ -8,6 +8,7 @@ from .funnel import funnel, funnel_from_columns
 from .heatmap import weighted_heatmap
 from .likert import likert_bars
 from .lines import annotated_event_plot, rolling_trend, split_line_plot
+from .sparkbars import sparkline_bar_plot
 from .stacked import banded_shares, stacked_bars
 from .venn import venn, venn_from_counts
 
@@ -16,7 +17,7 @@ __all__ = [
     "parallel_bars", "rolling_trend", "split_line_plot", "annotated_event_plot",
     "venn", "venn_from_counts", "weighted_heatmap",
     "funnel", "funnel_from_columns", "donut", "likert_bars",
-    "stacked_bars", "banded_shares",
+    "stacked_bars", "banded_shares", "sparkline_bar_plot",
     "contribution_bars", "range_dot_plot", "arrow_range_plot", "nested_bars",
 ]
 

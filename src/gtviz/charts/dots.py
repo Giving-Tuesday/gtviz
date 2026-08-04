@@ -119,7 +119,7 @@ def grouped_dot_plot(
     agg: str = "mean",
     as_percent: bool = True,
     colors: list | None = None,
-    markersize: int = 8,
+    markersize: int = 15,
     error: bool = False,
     show_n: bool = True,
     wrap: int | None = 25,
@@ -136,7 +136,7 @@ def grouped_dot_plot(
     """One dot series per group across a set of metrics.
 
     Generalizes the five depolarization/civic-intent dot plot clones with the
-    original report styling: gray "Everyone" series first, marker size 8,
+    original report styling: gray "Everyone" series first, marker size 15,
     frameless legend anchored outside the right edge with ``n=`` counts,
     x-axis ``(-1, 101)``, "Percent" x-label (labelpad 10), category labels
     wrapped at 25 characters, and no axes box.
