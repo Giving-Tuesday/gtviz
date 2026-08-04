@@ -41,7 +41,7 @@ jobs:
       - run: pip install "numpy>=2" "${{ matrix.pandas }}"
       - run: pip install -e .[dev] scikit-learn openpyxl
       - name: Pipeline unit tests
-        run: pytest tests/test_pipeline.py -v --cov=gtviz.pipeline --cov-report=term-missing
+        run: pytest tests/test_pipeline.py -v      
       - name: sklearn interoperability check
         run: |
           python - << 'PY'
